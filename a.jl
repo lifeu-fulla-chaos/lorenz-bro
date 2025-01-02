@@ -17,20 +17,42 @@
 # savefig("lorenz_plot.png")
 
 
-using DynamicalSystems # load the library
+using DynamicalSystems
+using Plots
 
-function lorenz_rule(u, p, t) 
+# Lorenz system rule
+function lorenz_rule(u, p, t)
     theta, rho, beta = p
     x, y, z = u
-    dx = theta*(y - x)
-    dy = x*(rho - z) - y
-    dz = x*y - beta*z
-    return SVector(dx, dy, dz) # Static Vector
+    dx = theta * (y - x)
+    dy = x * (rho - z) - y
+    dz = x * y - beta * z
+    return SVector(dx, dy, dz)
 end
-p = [10.0, 28.0, 8/3] # parameters: theta, rho, beta
-u0 = [0.0, 10.0, 0.0]
+
+# Parameters, initial conditions, and system setup
+p = [10.0, 28.0, 8/3]  # Parameters: theta, rho, beta
+u0 = [0.0, 10.0, 0.0]  # Initial condition
 lorenz = ContinuousDynamicalSystem(lorenz_rule, u0, p)
-T = 100.0 # total time
-Δt = 0.01 # sampling time
-A = trajectory(lorenz, T; Δt) # Use positional argument for dt
-println(A)
+
+# Simulation settings
+T = 100.0  # Total time
+Δt = 0.01  # Sampling time
+
+# Generate trajectory
+A, _ = trajectory(lorenz, T; Δt = Δt)
+
+# Extract x, y, z components of the trajectory
+x = A[:, 1]
+y = A[:, 2]
+z = A[:, 3]
+
+# Plot trajectory in 3D
+plot(x, y, z, lw=0.5, title="Lorenz Attractor", legend=false)
+xlabel!("x")
+ylabel!("y")
+zlabel!("z")
+
+# Save the figure
+savefig("lorenz_attractor.png")
+println("Figure saved as 'lorenz_attractor.png'")
