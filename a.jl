@@ -30,29 +30,36 @@ function lorenz_rule(u, p, t)
     return SVector(dx, dy, dz)
 end
 
-# Parameters, initial conditions, and system setup
+# Parameters and initial conditions
 p = [10.0, 28.0, 8/3]  # Parameters: theta, rho, beta
 u0 = [0.0, 10.0, 0.0]  # Initial condition
-lorenz = ContinuousDynamicalSystem(lorenz_rule, u0, p)
-
-# Simulation settings
+p1 = [10.0000001, 28.0, 8/3]
 T = 100.0  # Total time
 Δt = 0.01  # Sampling time
 
-# Generate trajectory
-A, _ = trajectory(lorenz, T; Δt = Δt)
+# Generate trajectories
+lorenz1 = ContinuousDynamicalSystem(lorenz_rule, u0, p)
+lorenz2 = ContinuousDynamicalSystem(lorenz_rule, u0, p1)
 
-# Extract x, y, z components of the trajectory
-x = A[:, 1]
-y = A[:, 2]
-z = A[:, 3]
+A, _ = trajectory(lorenz1, T; Δt)
+B, _ = trajectory(lorenz2, T; Δt)
 
-# Plot trajectory in 3D
-plot(x, y, z, lw=0.5, title="Lorenz Attractor", legend=false)
-xlabel!("x")
-ylabel!("y")
-zlabel!("z")
+# Extract x, y, z components of the trajectories
+xA, yA, zA = A[:, 1], A[:, 2], A[:, 3]
+xB, yB, zB = B[:, 1], B[:, 2], B[:, 3]
 
-# Save the figure
-savefig("lorenz_attractor.png")
-println("Figure saved as 'lorenz_attractor.png'")
+# Plot trajectories for x, y, and z together
+p1 = plot(0:Δt:T, xA, label="Trajectory A", title="x(t)", xlabel="Time", ylabel="x")
+plot!(p1, 0:Δt:T, xB, label="Trajectory B")
+
+p2 = plot(0:Δt:T, yA, label="Trajectory A", title="y(t)", xlabel="Time", ylabel="y")
+plot!(p2, 0:Δt:T, yB, label="Trajectory B")
+
+p3 = plot(0:Δt:T, zA, label="Trajectory A", title="z(t)", xlabel="Time", ylabel="z")
+plot!(p3, 0:Δt:T, zB, label="Trajectory B")
+
+# Combine into a single layout
+combined_plot = plot(p1, p2, p3, layout=(3, 1))
+savefig(combined_plot, "lorenz_trajectory_comparison.png")
+
+println("Figure saved as 'lorenz_trajectory_comparison.png'")
