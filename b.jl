@@ -22,13 +22,18 @@ function lorenz_slave(y, x, p, u)
 end
 
 # Define the backstepping control law
-function backstepping_control(x, y, k)
-    # Synchronization error
-    e = y - x
+function backstepping_control(x, y, p, k)
+    # Errors
+    e1 = y[1] - x[1]
+    e2 = y[2] - x[2]
+    e3 = y[3] - x[3]
 
-    # Control input using backstepping
-    u = -k .* e
-    return u
+    # Lyapunov-based backstepping control
+    u1 = -k[1] * e1
+    u2 = -k[2] * e2 + σ * (y[2] - y[1]) - σ * (x[2] - x[1])
+    u3 = -k[3] * e3 + y[1] * (ρ - y[3]) - y[2] - (x[1] * (ρ - x[3]) - x[2])
+    
+    return SVector(u1, u2, u3)
 end
 
 # Simulate the systems
