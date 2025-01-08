@@ -17,9 +17,9 @@ iu0 = rand(3) # initial condition doesn’t matter
 lo = ContinuousDynamicalSystem(lorenz84, iu0, p)
 
 # Grid setup
-xg = range(-1, 3; length = 50) # Increase resolution
-yg = range(-2, 3; length = 50) # Increase resolution
-zg = range(-2, 3; length = 50) # Increase resolution
+xg = range(-1, 3; length = 20) # Increase resolution
+yg = range(-2, 3; length = 20) # Increase resolution
+zg = range(-2, 3; length = 20) # Increase resolution
 grid = (xg, yg, zg)
 
 # Differential equation solver options
@@ -54,7 +54,7 @@ for (key, att) in attractors
     u0 = att[1] # First found point of attractor
     ls = lyapunovspectrum(lo, 10000; u0)
     println("Attractor $(key) has spectrum: $(ls) and fraction: $(fracs[key])")
-    trajectory = trajectory(lo, 10000; u0) # Get the trajectory
-    plot3d!(trajectory[:, 1], trajectory[:, 2], trajectory[:, 3], label="Attractor $key", linewidth=2, color=colors[key])
+    t, _ = trajectory(lo, 10000, u0) # Get the trajectory
+    plot3d!(t[:, 1], t[:, 2], t[:, 3], label="Attractor $key", linewidth=2, color=colors[key])
 end
-display(fig)
+savefig(fig, "a.png")
