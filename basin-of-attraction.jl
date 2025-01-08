@@ -57,4 +57,4 @@ for (key, att) in attractors
     t, _ = trajectory(lo, 10000, u0) # Get the trajectory
     plot3d!(t[:, 1], t[:, 2], t[:, 3], label="Attractor $key", linewidth=2, color=colors[key])
 end
-savefig(fig, "a.png")
+savefig(fig, "b.png")
