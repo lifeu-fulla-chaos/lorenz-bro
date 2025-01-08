@@ -74,3 +74,4 @@ time = 0:dt:(n_steps - 1) * dt
 # Plot synchronization error
 plot(time, e_traj', label=["e1" "e2" "e3"], xlabel="Time", ylabel="Error", title="Synchronization Error")
 savefig("synchronization_error.png")
+hi
