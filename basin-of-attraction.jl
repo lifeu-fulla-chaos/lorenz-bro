@@ -17,9 +17,9 @@ iu0 = rand(3) # initial condition doesn’t matter
 lo = ContinuousDynamicalSystem(lorenz84, iu0, p)
 
 # Grid setup
-xg = range(-1, 3; length = 20) # Increase resolution
-yg = range(-2, 3; length = 20) # Increase resolution
-zg = range(-2, 3; length = 20) # Increase resolution
+xg = range(-1, 3; length = 50) # Increase resolution
+yg = range(-2, 3; length = 50) # Increase resolution
+zg = range(-2, 3; length = 50) # Increase resolution
 grid = (xg, yg, zg)
 
 # Differential equation solver options
@@ -57,4 +57,4 @@ for (key, att) in attractors
     t, _ = trajectory(lo, 10000, u0) # Get the trajectory
     plot3d!(t[:, 1], t[:, 2], t[:, 3], label="Attractor $key", linewidth=2, color=colors[key])
 end
-savefig(fig, "b.png")
+savefig(fig, "d.png")
