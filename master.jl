@@ -1,5 +1,4 @@
 using Sockets
-using LinearAlgebra
 
 function run_master()
     # Define the Lorenz system for the master
@@ -13,35 +12,40 @@ function run_master()
     end
 
     # Simulation parameters
-    dt = 0.01  # Time step
-    T = 10.0   # Total simulation time
+    dt = 0.01
+    T = 10.0
     n_steps = Int(T / dt)
-
-    # Lorenz system parameters
     p = (10.0, 28.0, 8 / 3)
 
     # Initial state of the master system
     x = [1.0, 1.0, 1.0]
 
-    # Open a TCP server to send master state
+    # Start server
     server = listen(2000)
+    println("Master: Server started. Waiting for connections...")
 
-    println("Master: Waiting for connection...")
-    client = accept(server)
-    println("Master: Client connected.")
+    while true
+        # Accept a connection from the slave
+        client = accept(server)
+        println("Master: Slave connected.")
 
-    for _ in 1:n_steps
-        # Update the master system
-        x += lorenz_master(x, p) * dt
+        for i in 1:n_steps
+            # Update master system
+            x += lorenz_master(x, p) * dt
 
-        # Send current state to the slave system
-        write(client, join(x, ",") * "\n")
-        sleep(dt)
+            # Send master state to slave
+            write(client, join(x, ",") * "\n")
+            flush(client)
+        end
+
+        println("Master: Finished sending data to slave.")
+        close(client)
     end
 
-    close(client)
     close(server)
 end
 
 run_master()
+
+
 
