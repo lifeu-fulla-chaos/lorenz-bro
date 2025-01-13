@@ -1,6 +1,5 @@
 using Sockets
 using LinearAlgebra
-using Plots
 using StaticArrays
 
 function run_slave()
@@ -16,17 +15,16 @@ function run_slave()
 
     # Define the backstepping control law
     function backstepping_control(x, y, p, k)
-        # Errors
-        e1 = y[1] - x[1]
-        e2 = y[2] - x[2]
-        e3 = y[3] - x[3]
-
-        # Lyapunov-based backstepping control
+        e1, e2, e3 = y .- x
         u1 = -k[1] * e1
         u2 = -k[2] * e2 + p[1] * (y[2] - y[1]) - p[1] * (x[2] - x[1])
         u3 = -k[3] * e3 + y[1] * (p[2] - y[3]) - y[2] - (x[1] * (p[2] - x[3]) - x[2])
-
         return SVector(u1, u2, u3), SVector(e1, e2, e3)
+    end
+
+    # XOR decode message with chaotic signal
+    function xor_message(encoded_message, chaotic_signal)
+        return String([UInt8(c) ⊻ UInt8(m % 256) for (c, m) in zip(encoded_message, chaotic_signal)])
     end
 
     # Simulation parameters
@@ -34,16 +32,13 @@ function run_slave()
     T = 10.0
     n_steps = Int(T / dt)
     p = (10.0, 28.0, 8 / 3)
-    k = (5.0, 5.0, 5.0)  # Gains for the controller
+    k = (5.0, 5.0, 5.0)
 
     # Initial state of the slave system
     y = [5.0, 5.0, 5.0]
+    e = SVector(100.0, 100.0, 100.0)
+    x = nothing  # Initialize x to keep track of the last received state
 
-    # Arrays to store trajectories for plotting
-    y_traj = zeros(3, n_steps)
-    x_traj = zeros(3, n_steps)
-    e_traj = zeros(3, n_steps)
-    e = 100
     # Connect to the master system
     println("Slave: Connecting to master...")
     while true
@@ -51,13 +46,12 @@ function run_slave()
             connect("127.0.0.1", 2000)
         catch
             println("Slave: Connection failed. Retrying...")
-            sleep(2)  # Wait before retrying
+            sleep(2)
             continue
         end
         println("Slave: Connected to master.")
-        i = 1
+
         while norm(e) > 1e-3
-            # Read master state
             line = try
                 readline(client)
             catch
@@ -76,42 +70,35 @@ function run_slave()
                 continue
             end
 
-            # Compute control input and error
             u_control, e = backstepping_control(x, y, p, k)
-
-            # Update the slave system
             y += lorenz_slave(y, x, p, u_control) * dt
-
-            # Store trajectories and errors
-            x_traj[:, i] = x
-            y_traj[:, i] = y
-            e_traj[:, i] = e
-            i += 1
-            write(client, "not")
+            write(client, "ack\n")
             flush(client)
         end
-        write(client, "done")
+        write(client, "done\n")
         flush(client)
-        close(client)  # Close connection after the simulation
+        # Read encoded message from the master
+        encoded_message = try
+            readline(client)
+        catch
+            ""
+        end
+
+        if !isempty(encoded_message)
+            println("Slave: Received encoded message from master.")
+            println("Slave: Encoded message: ", encoded_message)
+            if x !== nothing
+                # Decode the message using the chaotic signal
+                chaotic_signal = round.(Int, x .* 100)
+                decoded_message = xor_message(codeunits(encoded_message), chaotic_signal)
+                println("Slave: Decoded message: ", decoded_message)
+            else
+                println("Slave: Error: Master state (x) is undefined.")
+            end
+        end
+
         break
     end
-    print(e_traj)
-    # Generate separate plots for synchronization and errors for x, y, z
-    time = 0:dt:(n_steps - 1) * dt
-    # for j in 1:3
-    #     # Synchronization plot
-    #     sync_plot = plot(time, x_traj[j, :], label="Master $(["x", "y", "z"][j])",
-    #                     xlabel="Time", ylabel="$(["x", "y", "z"][j])",
-    #                     title="Synchronization for $(["x", "y", "z"][j])")
-    #     plot!(sync_plot, time, y_traj[j, :], label="Slave $(["x", "y", "z"][j])", linestyle=:dash)
-    #     savefig(sync_plot, "synchronization_$(["x", "y", "z"][j]).png")
-
-    #     # Error plot
-    #     error_plot = plot(time, e_traj[j, :], label="Error $(["x", "y", "z"][j])",
-    #                     xlabel="Time", ylabel="Error",
-    #                     title="Synchronization Error for $(["x", "y", "z"][j])")
-    #     savefig(error_plot, "error_$(["x", "y", "z"][j]).png")
-    # end
 end
 
 run_slave()
