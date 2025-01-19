@@ -23,8 +23,11 @@ function run_slave()
 
         # Lyapunov-based backstepping control
         u1 = -k[1] * e1
+        # u1 = -p[1] * (x[2] - x[1]) + x[2]
         u2 = -k[2] * e2 + p[1] * (y[2] - y[1]) - p[1] * (x[2] - x[1])
+        # u2 = x[3] - x[1] * (p[3] - x[3]) + x[2]
         u3 = -k[3] * e3 + y[1] * (p[2] - y[3]) - y[2] - (x[1] * (p[2] - x[3]) - x[2])
+        # u3 = -x[1] * x[2] + p[2] * x[3] - (3 + 2 * k[1]) * x[1] - (5 + 2 * k[1]) * x[2] - (3 + k[1]) * x[3] 
 
         return SVector(u1, u2, u3), SVector(e1, e2, e3)
     end
