@@ -1,5 +1,5 @@
 using LinearAlgebra
-
+using StaticArrays
 # Define the master (drive) chaotic system
 function drive_system(x, p, t)
     # Example: Lorenz system or another chaotic system
@@ -37,6 +37,7 @@ function backstepping_control(x, y, p, k)
     
     return SVector(u1, u2, u3)
 end
+
 
 # Example usage
 σ, ρ, β = 10.0, 28.0, 8/3
@@ -81,6 +82,49 @@ sol = solve(prob, Tsit5())
 
 # Plot synchronization
 using Plots
-plot(sol, vars=(1, 4), label=["x1" "y1"], title="Synchronization: x1 vs y1")
-plot!(sol, vars=(2, 5), label=["x2" "y2"])
-plot!(sol, vars=(3, 6), label=["x3" "y3"])
+# Extract time and variables
+time = sol.t
+x1 = sol[1, :]
+y1 = sol[4, :]
+x2 = sol[2, :]
+y2 = sol[5, :]
+x3 = sol[3, :]
+y3 = sol[6, :]
+
+# Create overlaid plots
+p1 = plot(time, x1, label="x1", title="Synchronization: x1 vs y1", xlabel="Time", ylabel="State")
+plot!(p1, time, y1, label="y1")
+
+p2 = plot(time, x2, label="x2", title="Synchronization: x2 vs y2", xlabel="Time", ylabel="State")
+plot!(p2, time, y2, label="y2")
+
+p3 = plot(time, x3, label="x3", title="Synchronization: x3 vs y3", xlabel="Time", ylabel="State")
+plot!(p3, time, y3, label="y3")
+
+# Save plots
+savefig(p1, "synchronization_x1_y1.png")
+savefig(p2, "synchronization_x2_y2.png")
+savefig(p3, "synchronization_x3_y3.png")
+
+# Extract time and compute errors
+time = sol.t
+e1 = sol[4, :] .- sol[1, :]  # y1 - x1
+e2 = sol[5, :] .- sol[2, :]  # y2 - x2
+e3 = sol[6, :] .- sol[3, :]  # y3 - x3
+
+# Plot errors
+p_error = plot(time, e1, label="e1 = y1 - x1", title="Synchronization Errors", xlabel="Time", ylabel="Error")
+plot!(p_error, time, e2, label="e2 = y2 - x2")
+plot!(p_error, time, e3, label="e3 = y3 - x3")
+
+# Save plot
+savefig(p_error, "synchronization_errors.png")
+
+# function backstepping_control(x, y, k)
+#     # Synchronization error
+#     e = y - x
+
+#     # Control input using backstepping
+#     u = -k .* e
+#     return u
+# end
