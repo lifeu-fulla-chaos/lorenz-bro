@@ -30,21 +30,11 @@ function backstepping_control(x, y, p, k)
     e2 = y[2] - x[2]
     e3 = y[3] - x[3]
 
-    # Lyapunov-based backstepping control
-    u1 = -k[1] * e1
-    u2 = -k[2] * e2 + σ * (y[2] - y[1]) - σ * (x[2] - x[1])
-    u3 = -k[3] * e3 + y[1] * (ρ - y[3]) - y[2] - (x[1] * (ρ - x[3]) - x[2])
+    u1 = -σ * (y[2] - y[1] - x[2] + x[1]) + e2
+    u2 = -ρ * (y[1] - x[1]) + (y[2] - x[2]) + (y[1] * y[3]) - (x[1] * x[3]) + e3
+    u3 = (-y[1] * y[2]) + (x[1] * x[2]) + (β * (y[3] - x[3])) - ((3 + (2 * k[1])) * e1) - ((5 +( 2 * k[1])) * e2) - ((3 + k[1]) * e3)
     
     return SVector(u1, u2, u3)
-end
-
-function backstepping_control(x, y, p, k)
-    # Synchronization error
-    e = y .- x
-    k_vec = SVector(k...)  # Convert tuple to SVector
-    # Control input using backstepping
-    u = -k_vec .* e
-    return u
 end
 
 # Example usage
