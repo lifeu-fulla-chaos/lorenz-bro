@@ -38,6 +38,14 @@ function backstepping_control(x, y, p, k)
     return SVector(u1, u2, u3)
 end
 
+# function backstepping_control(x, y, p, k)
+#     # Synchronization error
+#     e = y .- x
+#     k_vec = SVector(k...)  # Convert tuple to SVector
+#     # Control input using backstepping
+#     u = -k_vec .* e
+#     return u
+# end
 
 # Example usage
 σ, ρ, β = 10.0, 28.0, 8/3
@@ -102,9 +110,9 @@ p3 = plot(time, x3, label="x3", title="Synchronization: x3 vs y3", xlabel="Time"
 plot!(p3, time, y3, label="y3")
 
 # Save plots
-savefig(p1, "synchronization_x1_y1.png")
-savefig(p2, "synchronization_x2_y2.png")
-savefig(p3, "synchronization_x3_y3.png")
+savefig(p1, "synchronization_x1_y1_reg.png")
+savefig(p2, "synchronization_x2_y2_reg.png")
+savefig(p3, "synchronization_x3_y3_reg.png")
 
 # Extract time and compute errors
 time = sol.t
@@ -118,13 +126,5 @@ plot!(p_error, time, e2, label="e2 = y2 - x2")
 plot!(p_error, time, e3, label="e3 = y3 - x3")
 
 # Save plot
-savefig(p_error, "synchronization_errors.png")
+savefig(p_error, "synchronization_errors_reg.png")
 
-# function backstepping_control(x, y, k)
-#     # Synchronization error
-#     e = y - x
-
-#     # Control input using backstepping
-#     u = -k .* e
-#     return u
-# end
