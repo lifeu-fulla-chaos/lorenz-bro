@@ -3,7 +3,7 @@ using StaticArrays
 # Define the master (drive) chaotic system
 function drive_system(x, p, t)
     # Example: Lorenz system or another chaotic system
-    σ, ρ, β = p
+    σ, ρ, β = p[1:3]
     x1, x2, x3 = x
     dx1 = σ * (x2 - x1)
     dx2 = x1 * (ρ - x3) - x2
@@ -14,12 +14,12 @@ end
 # Define the slave (response) system with control inputs
 function response_system(y, x, u, p, t)
     # Synchronize with the drive system
-    σ, ρ, β = p
+    d, e, f = p[4:6]
     y1, y2, y3 = y
     u1, u2, u3 = u
-    dy1 = σ * (y2 - y1) + u1
-    dy2 = y1 * (ρ - y3) - y2 + u2
-    dy3 = y1 * y2 - β * y3 + u3
+    dy1 = -y[2] - y[3] + u[1]
+    dy2 = y[1] +(d * y[2])+u[2]
+    dy3 = e + (y[3]*(y[1]-f))+u[3]
     return SVector(dy1, dy2, dy3)
 end
 
@@ -30,17 +30,18 @@ function backstepping_control(x, y, p, k)
     e2 = y[2] - x[2]
     e3 = y[3] - x[3]
 
-    u1 = -σ * (y[2] - y[1] - x[2] + x[1]) + e2
-    u2 = -ρ * (y[1] - x[1]) + (y[2] - x[2]) + (y[1] * y[3]) - (x[1] * x[3]) + e3
-    u3 = (-y[1] * y[2]) + (x[1] * x[2]) + (β * (y[3] - x[3])) - ((3 + (2 * k[1])) * e1) - ((5 +( 2 * k[1])) * e2) - ((3 + k[1]) * e3)
-    
+    u1 = σ * (x[2] - x[1]) + y[2]+ y[3]+e2
+    u2= -y[1]-(d*y[2])+(ρ *x[1])-x[2]-(x[1]*x[3])+e3
+    u3= -e-(y[3]*(y[1]-f))+(x[1]*x[2])- (β* x[3])- ((3 + (2 * k[1])) * e1) - ((5 +( 2 * k[1])) * e2) - ((3 + k[1]) * e3)
+
     return SVector(u1, u2, u3)
 end
 
 # Example usage
 σ, ρ, β = 10.0, 28.0, 8/3
-p = (σ, ρ, β)
+d, e, f=0.2, 0.2, 5.7
 k = (5.0, 5.0, 5.0) # Gains for the controller
+p = (σ, ρ, β, d, e, f)
 
 # Initial conditions
 x0 = [1.0, 0.0, 0.0]  # Drive system initial condition
@@ -55,7 +56,8 @@ using DifferentialEquations
 # Define coupled systems with backstepping control
 function dynamics!(du, u, p, t)
     x, y = u[1:3], u[4:6]  # Split state into drive and response systems
-    σ, ρ, β = p
+    σ, ρ, β = p[1:3]
+    d, e, f = p[4:6]
 
     # Compute control
     u_control = backstepping_control(x, y, p, k)
@@ -90,19 +92,19 @@ x3 = sol[3, :]
 y3 = sol[6, :]
 
 # Create overlaid plots
-p1 = plot(time, x1, label="x1", title="Synchronization: x1 vs y1", xlabel="Time", ylabel="State")
-plot!(p1, time, y1, label="y1")
+pl1 = plot(time, x1, label="x1", title="Synchronization: x1 vs y1", xlabel="Time", ylabel="State")
+plot!(pl1, time, y1, label="y1")
 
-p2 = plot(time, x2, label="x2", title="Synchronization: x2 vs y2", xlabel="Time", ylabel="State")
-plot!(p2, time, y2, label="y2")
+pl2 = plot(time, x2, label="x2", title="Synchronization: x2 vs y2", xlabel="Time", ylabel="State")
+plot!(pl2, time, y2, label="y2")
 
-p3 = plot(time, x3, label="x3", title="Synchronization: x3 vs y3", xlabel="Time", ylabel="State")
-plot!(p3, time, y3, label="y3")
+pl3 = plot(time, x3, label="x3", title="Synchronization: x3 vs y3", xlabel="Time", ylabel="State")
+plot!(pl3, time, y3, label="y3")
 
 # Save plots
-savefig(p1, "synchronization_x1_y1_reg.png")
-savefig(p2, "synchronization_x2_y2_reg.png")
-savefig(p3, "synchronization_x3_y3_reg.png")
+savefig(pl1, "synchronization_x1_y1_reg.png")
+savefig(pl2, "synchronization_x2_y2_reg.png")
+savefig(pl3, "synchronization_x3_y3_reg.png")
 
 # Extract time and compute errors
 time = sol.t
