@@ -60,7 +60,7 @@ function dynamics!(du, u, p, t)
     σ, ρ, β = p
 
     # Compute control
-    u_control = backstepping_control(x, y, p, k)
+    u_control = (x, y, p, k)
 
     # Drive system dynamics
     dx = drive_system(x, p, t)
@@ -71,8 +71,8 @@ function dynamics!(du, u, p, t)
     # Combine derivatives
     du[1:3] = dx
     du[4:6] = dy
-    append!(xdata, [x])
-    append!(ydata, [y])
+    append!(xdata, [dx])
+    append!(ydata, [dy])
     append!(controldata, [u_control])
 end
 
@@ -82,9 +82,9 @@ u0 = vcat(x0, y0)  # Combine master and slave initial states
 # Solve the coupled system
 prob = ODEProblem(dynamics!, u0, tspan, p)
 sol = solve(prob, Tsit5())
-print(xdata.len)
+print(length(controldata))
 # Save the data
-df = DataFrame(t=sol.t, x1=[x[1] for x in xdata], x2=[x[2] for x in xdata], x3=[x[3] for x in xdata],
+df = DataFrame(x1=[x[1] for x in xdata], x2=[x[2] for x in xdata], x3=[x[3] for x in xdata],
     y1=[y[1] for y in ydata], y2=[y[2] for y in ydata], y3=[y[3] for y in ydata],
     u1=[u[1] for u in controldata], u2=[u[2] for u in controldata], u3=[u[3] for u in controldata])
-CSV.write("data.csv", df)
+CSV.write("data1.csv", df)
