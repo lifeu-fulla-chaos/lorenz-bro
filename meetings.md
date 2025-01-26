@@ -44,7 +44,19 @@
 
     **SK** wrote the code to send a text message between the master and the slave using the final master state. Shortcoming of the system was highlighted. 
 
+-   ### 25th Jan 2025
+    **AV** derived backstepping equation for rossler system using rossler as slave, lorenz as master
+    **SM and SS** created the data for training. Figured out new roadblocks about coordination/synchronization
+    **SK** worked on having two asnychronous systems and sending message using that.
 
+-   ### 26th Jan 2025
+    **AV** derived backstepping eqation for rossler system using lorenz as slave, rossler as master
+    **SM and SS** got code for Tsit5 solver, threshold logic to know when synchronization has occured
+    **SK** continued same task
+
+    #### Roadblocks
+    -   coordination how to do - slave has moved to new time step by the time master encrypts a message andd sends it. need to figure if coordination or synchronization issue
+    -   tsit5 solver - how does it work, how to use it to emit a new state when needed
 
 
 
