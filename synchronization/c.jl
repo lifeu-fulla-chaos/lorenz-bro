@@ -40,7 +40,7 @@ end
 # Example usage
 σ, ρ, β = 10.0, 28.0, 8/3
 p = (σ, ρ, β)
-k = (5.0, 5.0, 5.0) # Gains for the controller
+k = (10.0, 10.0, 10.0) # Gains for the controller
 
 # Initial conditions
 x0 = [1.0, 0.0, 0.0]  # Drive system initial condition
@@ -109,7 +109,7 @@ time = sol.t
 e1 = sol[4, :] .- sol[1, :]  # y1 - x1
 e2 = sol[5, :] .- sol[2, :]  # y2 - x2
 e3 = sol[6, :] .- sol[3, :]  # y3 - x3
-
+print(sum(e1[end-10:end]), sum(e2[end-10:end]), sum(e3[end-10:end]))
 # Plot errors
 p_error = plot(time, e1, label="e1 = y1 - x1", title="Synchronization Errors", xlabel="Time", ylabel="Error")
 plot!(p_error, time, e2, label="e2 = y2 - x2")

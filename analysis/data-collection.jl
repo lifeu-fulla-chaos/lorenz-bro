@@ -60,7 +60,7 @@ function dynamics!(du, u, p, t)
     σ, ρ, β = p
 
     # Compute control
-    u_control = (x, y, p, k)
+    u_control = backstepping_control(x, y, p, k)
 
     # Drive system dynamics
     dx = drive_system(x, p, t)
@@ -71,8 +71,8 @@ function dynamics!(du, u, p, t)
     # Combine derivatives
     du[1:3] = dx
     du[4:6] = dy
-    append!(xdata, [dx])
-    append!(ydata, [dy])
+    append!(xdata, [x])
+    append!(ydata, [y])
     append!(controldata, [u_control])
 end
 
