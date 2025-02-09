@@ -1,5 +1,31 @@
 - 80 at a time, synchronize with the last one - 7.5 seconds / metric - measure real time
 - set a common seed, choose same random state 
+
 - set the solver for a short time - works
 - use acks
 
+-big function
+    - first 80 states for synchronization, only x dot needed, send to slave, synchronize.
+    - after that, for encryption we need the solution
+    - function should have a flag to switch between synch and encrypt mode
+    - input is initial condition and number of time steps, output in synch states is xdot for time steps, 
+        in encrpyt state is solution for time steps.
+
+
+- workflow
+- enter synch mode..
+- get master xdot
+- send to slave
+- synchronize
+- send back ack on completion
+- repeat if not synched
+- enter encrypt mode
+- decide on a seed
+- generate 30 states
+- randomly choose one state
+- encrypt
+- send
+- slave also generates 30 states
+- decrypts by randomly choosing, state remains same because of seed
+- if no encryption, send ack to move on to next 30
+- if encryption, send ack after encrypting
