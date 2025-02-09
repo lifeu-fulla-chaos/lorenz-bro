@@ -1,5 +1,5 @@
 - 80 at a time, synchronize with the last one - 7.5 seconds / metric - measure real time
-- set a common seed, choose same random state
+- set a common seed, choose same random state 
 - set the solver for a short time - works
 - use acks
 
