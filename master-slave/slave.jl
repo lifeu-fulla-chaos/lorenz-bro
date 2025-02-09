@@ -28,7 +28,7 @@ function run_slave()
 
     # Simulation parameters
     dt = 0.01
-    T = 10.0
+    T = 7.0
     n_steps = Int(T / dt)
     p = (10.0, 28.0, 8 / 3)  # Parameters for the Lorenz system
     k = (5.0, 5.0, 5.0)  # Gains for the controller

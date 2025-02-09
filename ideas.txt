@@ -1,0 +1,5 @@
+- 80 at a time, synchronize with the last one
+- set a common seed, choose same random state
+- set the solver for a short time
+- use acks
+
