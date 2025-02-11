@@ -12,7 +12,7 @@ end
 
 # Simulation parameters
 dt = 0.01
-T = 7.0
+T = 10.0
 tspan = (0.0, T)
 p = (10.0, 28.0, 8 / 3)
 

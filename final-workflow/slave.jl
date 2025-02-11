@@ -2,6 +2,8 @@ using Sockets
 using DifferentialEquations
 using StaticArrays
 using Plots
+using CSV
+using DataFrames
 
 function run_slave()
     # Lorenz system for the slave with control input
@@ -26,7 +28,7 @@ function run_slave()
 
     # Simulation parameters
     dt = 0.01
-    T = 7.0
+    T = 10.0
     tspan = (0.0, dt)  # Solve step-by-step
     p = (10.0, 28.0, 8 / 3)  # Lorenz system parameters
     k = (5.0, 5.0, 5.0)  # Controller gains
@@ -94,15 +96,17 @@ function run_slave()
             sol_slave = solve(prob_slave, Tsit5(), dtmax=dt)
 
             # Store values
-            y_traj[:, i] = sol_slave.u[end]  # Extract state at t=0 (start of step)
+            y_traj[:, i] = sol_slave.u[end]  
             x_traj[:, i] = x_t
-            e_traj[:, i] = y_traj[:, i] .- x_t
+            e_traj[:, i] = y_traj[:, i] .- x_traj[:, i]
+              # Compute error correctly
+
 
             # Update initial state for next iteration
             y0 = y_traj[:, i]
         end
-        println(y_traj)
         # Plot synchronization and error
+       
         time = 0:dt:(n_steps - 1) * dt
         for j in 1:3
             sync_plot = plot(time, x_traj[j, :], label="Master $(["x", "y", "z"][j])",
@@ -118,6 +122,24 @@ function run_slave()
         end
 
         println("Slave: Synchronization complete. Exiting.")
+
+
+        # Create a time column
+        time = collect(0:dt:(n_steps - 1) * dt)
+
+        # Combine all trajectories into a single DataFrame
+        df = DataFrame(
+            time = time,
+            x_master = x_traj[1, :],  y_master = x_traj[2, :],  z_master = x_traj[3, :],
+            x_slave  = y_traj[1, :],  y_slave  = y_traj[2, :],  z_slave  = y_traj[3, :],
+            error_x  = e_traj[1, :],  error_y  = e_traj[2, :],  error_z  = e_traj[3, :]
+        )
+
+        # Save to a single CSV file
+        CSV.write("synchronization_data.csv", df)
+
+        println("Slave: Data saved to synchronization_data.csv")
+
         break
     end
 end
