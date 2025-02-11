@@ -14,6 +14,12 @@
 
     Showed her new and improved backstepping, transmission of a single text message. Told her we want to attempt to improve synchronization accuracy with ML. Were give the green light. 
 
+-   ### 28th Jan 2025
+    Presented her with all the problems, suggested usage of neuralODE. Told us to use non autonomous systems to see if it works with it. Pelvan system
+
+    ### 6th Feb 2025
+    Present her with further problems. Approved the idea of using acks and solving for shorter periods of time to simulate fewer states at a time. Non autonomous system can have input anywhere. Try something to coordinate. 
+
 ## Team meetings
 
 -   ### 2nd Jan 2025
@@ -58,6 +64,23 @@
     -   coordination how to do - slave has moved to new time step by the time master encrypts a message andd sends it. need to figure if coordination or synchronization issue
     -   tsit5 solver - how does it work, how to use it to emit a new state when needed
 
+    ### 29th Jan 2025
+    Attempt to learn NeuralODE. Huge bust. No one could figure. 
 
+-   ### 5th Feb 2025
+    - **SK** attempted to encrypt a message and send it and once again, the highlighted issue was the coordination between slave and master. 
+    - **SM and AV** tried to run a non autonomous system and had doubts about which side can have the extra input
+    - Ideation of using acks for coordination between slave and master. 
 
+-   ### 9th Feb 2025
+    - Coming up with the design for coordination. 
+    - send 50 packets, synchronize. 
+    - then send 30 at a time and use a seed to randomly select one of the 30 to encrypt.
+    - use acks
+    - function to genrate states with modes
+    - sockets to communicate
+
+    ### 10th Feb 2025
+    - Bring **SK** up to date
+    - Attempt to make the describe system. Failed. 
 
