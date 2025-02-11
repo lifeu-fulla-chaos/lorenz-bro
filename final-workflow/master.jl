@@ -27,6 +27,14 @@ sol_master = solve(prob, Tsit5(); dtmax=dt)
 time = sol_master.t
 x_values = hcat(sol_master.u...)'  # Convert solution vectors to a matrix
 
+# Compute derivatives at each time step
+dx_values = similar(x_values)  # Create a matrix to store derivatives
+for i in 1:length(time)
+    dx = zeros(3)  # Initialize derivative vector
+    lorenz_master!(dx, x_values[i, :], p, time[i])  # Compute dx/dt at time[i]
+    dx_values[i, :] .= dx  # Store the computed derivatives
+end
+
 function run_master()
     server = listen(2000)
     println("Master: Server started. Waiting for connections...")
@@ -36,12 +44,14 @@ function run_master()
         println("Master: Slave connected.")
 
         for i in 1:length(time)
-            x = x_values[i, :]  # Get the ith state vector
-            write(client, join(x, ",") * "\n")  # Convert to CSV format
+            x = x_values[i, :]
+            dx = dx_values[i, :]
+            # Send state and derivative values in CSV format
+            write(client, join(vcat(x, dx), ",") * "\n")
             flush(client)
         end
 
-        println("Master: Finished sending state data to slave.")
+        println("Master: Finished sending state and derivative data to slave.")
         close(client)
         break
     end
