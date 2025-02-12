@@ -47,7 +47,7 @@ function run_slave()
     # Simulation parameters
     dt = 0.01
     T = 7.0
-    tspan = (0.0, dt)  # Solve step-by-step
+    tspan = (0.0, T)  # Solve step-by-step
     p = (10.0, 28.0, 8 / 3)  # Lorenz system parameters
     k = (10.0, 10.0, 10.0)  # Controller gains
 
@@ -95,33 +95,31 @@ function run_slave()
             return
         end
 
-        println(size(master_x))
-        println(size(master_dx))
         master_x = hcat(master_x...)'  # Convert to matrix
         master_dx = hcat(master_dx...)'  # Convert to matrix
         n_steps = size(master_x, 1)
-        println(size(master_x))
-        println(size(master_dx))
 
         # Arrays to store trajectories for plotting
 
         u0 = vcat(master_x[1, :], y0, master_dx[1, :])  # Initial state for the slave system
         prob = ODEProblem(dynamics!, u0, tspan, p)
-        sol = solve(prob, Tsit5(), dtmax=dt)
+        sol = solve(prob, Tsit5())
         # Plot synchronization and error
-        y_traj = sol.u[1:3, :]
+        y_traj = hcat(sol.u...)'[:, 4:6]
+        println(size(y_traj))
         x_traj = master_x
+        print(size(x_traj))
         e_traj = y_traj .- x_traj
 
         time = 0:dt:(n_steps - 1) * dt
         for j in 1:3
-            sync_plot = plot(time, x_traj[j, :], label="Master $(["x", "y", "z"][j])",
+            sync_plot = plot(time, x_traj[:, j], label="Master $(["x", "y", "z"][j])",
                             xlabel="Time", ylabel="$(["x", "y", "z"][j])",
                             title="Synchronization for $(["x", "y", "z"][j])")
-            plot!(sync_plot, time, y_traj[j, :], label="Slave $(["x", "y", "z"][j])", linestyle=:dash)
+            plot!(sync_plot, time, y_traj[:, j], label="Slave $(["x", "y", "z"][j])", linestyle=:dash)
             savefig(sync_plot, "synchronization_$(["x", "y", "z"][j]).png")
 
-            error_plot = plot(time, e_traj[j, :], label="Error $(["x", "y", "z"][j])",
+            error_plot = plot(time, e_traj[:, j], label="Error $(["x", "y", "z"][j])",
                             xlabel="Time", ylabel="Error",
                             title="Synchronization Error for $(["x", "y", "z"][j])")
             savefig(error_plot, "error_$(["x", "y", "z"][j]).png")

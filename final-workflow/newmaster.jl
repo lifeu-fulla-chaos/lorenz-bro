@@ -13,7 +13,7 @@ end
 
 # Simulation parameters
 dt = 0.01
-T = 7.0
+T = 100.0
 tspan = (0.0, T)
 p = (10.0, 28.0, 8 / 3)
 
@@ -22,7 +22,7 @@ x0 = [1.0, 1.0, 1.0]
 
 # Solve the Lorenz system
 prob = ODEProblem(lorenz_master!, x0, tspan, p)
-sol_master = solve(prob, Tsit5(), dtmax=dt)
+sol_master = solve(prob, Tsit5())
 
 # Extract state values
 time = sol_master.t
@@ -32,6 +32,25 @@ for i in 1:size(x_values, 1)
     dx = lorenz_master!(similar(x_values[i, :]), x_values[i, :], p, time[i])
     push!(dx_values, dx)
 end
+dx_values = hcat(dx_values...)'  # Convert to matrix
+# using Plots
+# println(size(x_values))
+# # for i in 1:3
+# #     plot!(time, x_values[:, i], label="x$i", xlabel="Time", ylabel="Value", title="Master System State Trajectories")
+# # end
+# # savefig("master.png")
+
+# using Plots
+
+# for i in 1:3
+#     p = plot(time, dx_values[:, i], 
+#              label="dx$i", 
+#              xlabel="Time", 
+#              ylabel="Value", 
+#              title="Master System State Derivative dx$i")
+#     savefig(p, "derivative_dx$i.png")  # Save each plot separately
+#     # display(p)  # Show the plot (optional)
+# end
 
 function run_master()
     server = listen(2000)
