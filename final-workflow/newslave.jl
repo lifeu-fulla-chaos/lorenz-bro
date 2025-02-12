@@ -103,26 +103,27 @@ function run_slave()
 
         u0 = vcat(master_x[1, :], y0, master_dx[1, :])  # Initial state for the slave system
         prob = ODEProblem(dynamics!, u0, tspan, p)
-        sol = solve(prob, Tsit5())
+        sol = solve(prob, Tsit5(), dtmax=dt)
         # Plot synchronization and error
         y_traj = hcat(sol.u...)'[:, 4:6]
         println(size(y_traj))
         x_traj = master_x
         print(size(x_traj))
-        e_traj = y_traj .- x_traj
+        # e_traj = y_traj .- x_traj
 
         time = 0:dt:(n_steps - 1) * dt
+        time1 = sol.t
         for j in 1:3
             sync_plot = plot(time, x_traj[:, j], label="Master $(["x", "y", "z"][j])",
                             xlabel="Time", ylabel="$(["x", "y", "z"][j])",
                             title="Synchronization for $(["x", "y", "z"][j])")
-            plot!(sync_plot, time, y_traj[:, j], label="Slave $(["x", "y", "z"][j])", linestyle=:dash)
+            plot!(sync_plot, time1, y_traj[:, j], label="Slave $(["x", "y", "z"][j])", linestyle=:dash)
             savefig(sync_plot, "synchronization_$(["x", "y", "z"][j]).png")
 
-            error_plot = plot(time, e_traj[:, j], label="Error $(["x", "y", "z"][j])",
-                            xlabel="Time", ylabel="Error",
-                            title="Synchronization Error for $(["x", "y", "z"][j])")
-            savefig(error_plot, "error_$(["x", "y", "z"][j]).png")
+            # error_plot = plot(time, e_traj[:, j], label="Error $(["x", "y", "z"][j])",
+            #                 xlabel="Time", ylabel="Error",
+            #                 title="Synchronization Error for $(["x", "y", "z"][j])")
+            # savefig(error_plot, "error_$(["x", "y", "z"][j]).png")
         end
 
         println("Slave: Synchronization complete. Exiting.")
@@ -136,7 +137,7 @@ function run_slave()
             time = time,
             x_master = x_traj[1, :],  y_master = x_traj[2, :],  z_master = x_traj[3, :],
             x_slave  = y_traj[1, :],  y_slave  = y_traj[2, :],  z_slave  = y_traj[3, :],
-            error_x  = e_traj[1, :],  error_y  = e_traj[2, :],  error_z  = e_traj[3, :]
+            # error_x  = e_traj[1, :],  error_y  = e_traj[2, :],  error_z  = e_traj[3, :]
         )
 
         # Save to a single CSV file
