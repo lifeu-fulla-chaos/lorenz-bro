@@ -84,7 +84,7 @@ function run_slave()
         e_traj = zeros(3, n_steps)
 
         # Synchronization Loop
-        for i in 2:n_steps
+        for i in 1:n_steps
             x_t = master_x[i, :]  # Master state at time step i
 
             # Compute control input
@@ -94,15 +94,10 @@ function run_slave()
             p_slave = (p..., x_t, u_t)
             prob_slave = ODEProblem(lorenz_slave!, y0, tspan, p_slave)
             sol_slave = solve(prob_slave, Tsit5(), dtmax=dt)
-            println(sol_slave)
             # Store values
             y_traj[:, i] = sol_slave.u[end]
             x_traj[:, i] = x_t
             e_traj[:, i] = y_traj[:, i] .- x_traj[:, i]
-              # Compute error correctly
-
-
-            # Update initial state for next iteration
             y0 = y_traj[:, i]
         end
         # Plot synchronization and error

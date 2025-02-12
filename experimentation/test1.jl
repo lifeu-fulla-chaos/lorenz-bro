@@ -16,15 +16,15 @@ function drive_system(x, p, t)
 end
 
 # Define the slave (response) system with control inputs
-function response_system(y, x, u, p)
+function response_system(y, p, t)
     # Synchronize with the drive system
-    σ, ρ, β = p
+    σ, ρ, β, x, u = p
     y1, y2, y3 = y
     u1, u2, u3 = u
     dy1 = σ * (y2 - y1) + u1
     dy2 = y1 * (ρ - y3) - y2 + u2
     dy3 = y1 * y2 - β * y3 + u3
-    return SVector(dy1, dy2, dy3)
+    return [dy1, dy2, dy3]
 end
 
 # Backstepping controller
@@ -38,71 +38,67 @@ function backstepping_control(x, y, p, k)
     u2 = -ρ * (y[1] - x[1]) + (y[2] - x[2]) + (y[1] * y[3]) - (x[1] * x[3]) + e3
     u3 = (-y[1] * y[2]) + (x[1] * x[2]) + (β * (y[3] - x[3])) - ((3 + (2 * k[1])) * e1) - ((5 +( 2 * k[1])) * e2) - ((3 + k[1]) * e3)
     
-    return SVector(u1, u2, u3)
+    return SVector(u1, u2, u3), SVector(e1, e2, e3)
 end
 
 # Example usage
 σ, ρ, β = 10.0, 28.0, 8/3
 p = (σ, ρ, β)
 k = (5.0, 5.0, 5.0) # Gains for the controller
-tspan = (0.0, 100.0)
+tspan = (0.0, 7.0)
 # Initial conditions
 x0 = SVector(1.0, 1.0, 1.0)
-y0 = SVector(0.5, -0.65, 0.0)
+y0 = [0.5, -0.65, 0.0]
 prob = ODEProblem(drive_system, x0, tspan, p)
-sol_master = solve(prob, RK4(), dt=0.01)
+sol_master = solve(prob, Tsit5())
 dx_values = []
-xdata = sol_master.u
-dx_values = reduce(hcat, [drive_system(xdata[i], p, 1) for i in 1:length(xdata)])'
+xdata = reduce(hcat, sol_master.u) |> transpose
+println(size(xdata))
+dt = 0.01
+dx_values = reduce(hcat, [drive_system(xdata[i, :], p, 1) for i in 1:size(xdata, 1)])'
+n_steps = sol_master.t
+y_traj = zeros(length(n_steps), 3)
+x_traj = zeros(length(n_steps), 3)
+e_traj = zeros(length(n_steps), 3)
+println("herer")
+for (i, t) in enumerate(n_steps)
+    global y0
+    x_t = xdata[i, :]  # Master state at time step i
+            # Compute control input
+    u_t, e_t = backstepping_control(x_t, y0, p, k)
 
-
-
-# Define coupled systems with backstepping control
-function dynamics!(du, u, p, t)
-    x, y, dx1 = u[1:3], u[4:6], u[7:9]  # Split state into drive and response systems
-    σ, ρ, β = p
-
-    # Compute control
-    u_control = backstepping_control(x, y, p, k)
-
-    # Drive system dynamics
-    dx = dx1
-    # Response system dynamics
-    dy = response_system(y, x, u_control, p)
-
-    # Combine derivatives
-    du[1:3] = dx
-    du[4:6] = dy
+    p_slave = (p..., x_t, u_t)
+    prob_slave = ODEProblem(response_system, y0, (t, t+dt), p_slave)
+    sol_slave = solve(prob_slave, Tsit5())
+    y_traj[i, :] = sol_slave.u[end]
+    x_traj[i, :] = x_t
+    e_traj[i, :] = y_traj[i, :] - x_t
+    y0 = y_traj[i, :]  # Update the response system state
 end
-# Initial conditions and state
-u0 = vcat(x0, y0, dx_values[1, :])  # Combine master and slave initial states
-# Solve the coupled system
-prob = ODEProblem(dynamics!, u0, tspan, p)
-sol = solve(prob, RK4(), dt=0.01)
 
-
+println("done")
 # Plot the synchronization error
 using Plots
 
-# Extract state values properly
-x_vals = reduce(hcat, sol_master.u) |> transpose
-println(size(x_vals))
-y_vals = hcat(sol.u...)'[:, 1:3] # Response system states (y1, y2, y3)
-println(size(y_vals))
 # Time values
-t_vals = sol.t
-t_vals1 = sol_master.t
+println(size(y_traj))
 # Labels for states
 state_labels = ["x₁", "x₂", "x₃"]
 response_labels = ["y₁", "y₂", "y₃"]
+println(y_traj[1, :])
+t_vals = sol_master.t  # Time values from the master system
 
-# Plot each state separately
 for i in 1:3
     # Plot x_i
-    plt_x = plot(t_vals1, x_vals[:, i], label=state_labels[i], xlabel="Time", ylabel="State", title="Master System $(state_labels[i])", lw=2)
+    plt_x = plot(t_vals, x_traj[:, i], label=state_labels[i], xlabel="Time", ylabel="State", title="Master System $(state_labels[i])", lw=2)
     savefig(plt_x, "master_system_$(state_labels[i]).png")
 
     # Plot y_i
-    plt_y = plot(t_vals, y_vals[:, i], label=response_labels[i], xlabel="Time", ylabel="State", title="Response System $(response_labels[i])", lw=2)
+    plt_y = plot(t_vals, y_traj[:, i], label=response_labels[i], xlabel="Time", ylabel="State", title="Response System $(response_labels[i])", lw=2)
     savefig(plt_y, "response_system_$(response_labels[i]).png")
+
+    # Plot e_i
+    plt_e = plot(t_vals, e_traj[:, i], label="e$(i)", xlabel="Time", ylabel="Error", title="Synchronization Error $(i)", lw=2)
+    savefig(plt_e, "synchronization_error_$(i).png")
 end
+
