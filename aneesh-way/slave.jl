@@ -90,8 +90,8 @@ function run_synchronization()
             end
         end
 
-        println("lowest", e_traj[:, minarg], norm(e_traj[:, minarg]))
-        y0 = y_traj[:, minarg]
+        println("last", e_traj[:, end], norm(e_traj[:, end]))
+        y0 = y_traj[:, end]
         write(client, join(y0, ",") * "\n")
         flush(client)
         prob_slave = ODEProblem(lorenz_slave!, y0, (7.0, 100.0), (p..., [0.0, 0.0, 0.0]))
