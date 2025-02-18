@@ -25,7 +25,15 @@
 - randomly choose one state
 - encrypt
 - send
+
+
 - slave also generates 30 states
 - decrypts by randomly choosing, state remains same because of seed
 - if no encryption, send ack to move on to next 30
 - if encryption, send ack after encrypting
+
+
+
+rossler takes master params
+sending timesteps to synchronize
+it doesnt really work
